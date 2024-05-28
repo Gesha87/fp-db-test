@@ -10,12 +10,12 @@ use mysqli;
 readonly class Database implements DatabaseInterface
 {
     private mysqli $mysqli;
-    private ParamResolverFactory $paramResolver;
+    private ParamResolverFactory $paramResolverFactory;
 
     public function __construct(mysqli $mysqli)
     {
         $this->mysqli = $mysqli;
-        $this->paramResolver = new ParamResolverFactory();
+        $this->paramResolverFactory = new ParamResolverFactory($this->mysqli);
     }
 
     public function buildQuery(string $query, array $args = []): string
@@ -37,7 +37,7 @@ readonly class Database implements DatabaseInterface
                     $currentContext->skip();
                 }
 
-                $paramResolver = $this->paramResolver->getResolver($query[$i + 1] ?? null);
+                $paramResolver = $this->paramResolverFactory->getResolver($query[$i + 1] ?? null);
                 $currentContext->addContent($paramResolver->resolve($arg));
 
                 if (!$paramResolver instanceof DefaultParamResolver) {

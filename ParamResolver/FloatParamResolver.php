@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace FpDbTest\ParamResolver;
 
-class FloatParamResolver implements ParamResolver
+readonly class FloatParamResolver implements ParamResolver
 {
     public function resolve(mixed $arg): string
     {

@@ -5,9 +5,15 @@ declare(strict_types=1);
 namespace FpDbTest\ParamResolver;
 
 use Exception;
+use mysqli;
 
-class ArrayParamResolver implements ParamResolver
+readonly class ArrayParamResolver implements ParamResolver
 {
+    public function __construct(
+        private mysqli $mysqli,
+    ) {
+    }
+
     public function resolve(mixed $arg): string
     {
         if (!is_array($arg)) {
@@ -23,7 +29,7 @@ class ArrayParamResolver implements ParamResolver
                 $parts[] = sprintf(
                     '%s = %s',
                     (new IdentifierParamResolver())->resolve($key),
-                    (new DefaultParamResolver())->resolve($value),
+                    (new DefaultParamResolver($this->mysqli))->resolve($value),
                 );
             }
 
@@ -32,7 +38,7 @@ class ArrayParamResolver implements ParamResolver
             return implode(
                 ', ',
                 array_map(
-                    fn($item): string => (new DefaultParamResolver())->resolve($item),
+                    fn($item): string => (new DefaultParamResolver($this->mysqli))->resolve($item),
                     $arg,
                 )
             );
