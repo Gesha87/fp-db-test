@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace FpDbTest\ParamResolver;
 
 use Exception;
-use mysqli;
+use FpDbTest\StringEscaper\StringEscaper;
 
 readonly class ArrayParamResolver implements ParamResolver
 {
     public function __construct(
-        private mysqli $mysqli,
+        private StringEscaper $escaper,
     ) {
     }
 
@@ -29,7 +29,7 @@ readonly class ArrayParamResolver implements ParamResolver
                 $parts[] = sprintf(
                     '%s = %s',
                     (new IdentifierParamResolver())->resolve($key),
-                    (new DefaultParamResolver($this->mysqli))->resolve($value),
+                    (new DefaultParamResolver($this->escaper))->resolve($value),
                 );
             }
 
@@ -38,7 +38,7 @@ readonly class ArrayParamResolver implements ParamResolver
             return implode(
                 ', ',
                 array_map(
-                    fn($item): string => (new DefaultParamResolver($this->mysqli))->resolve($item),
+                    fn($item): string => (new DefaultParamResolver($this->escaper))->resolve($item),
                     $arg,
                 )
             );

@@ -5,6 +5,7 @@ namespace FpDbTest;
 use Exception;
 use FpDbTest\ParamResolver\DefaultParamResolver;
 use FpDbTest\ParamResolver\ParamResolverFactory;
+use FpDbTest\StringEscaper\MysqlStringEscaper;
 use mysqli;
 
 readonly class Database implements DatabaseInterface
@@ -15,7 +16,9 @@ readonly class Database implements DatabaseInterface
     public function __construct(mysqli $mysqli)
     {
         $this->mysqli = $mysqli;
-        $this->paramResolverFactory = new ParamResolverFactory($this->mysqli);
+        $this->paramResolverFactory = new ParamResolverFactory(
+            new MysqlStringEscaper($this->mysqli),
+        );
     }
 
     public function buildQuery(string $query, array $args = []): string
@@ -53,8 +56,8 @@ readonly class Database implements DatabaseInterface
         return $currentContext->getContent();
     }
 
-    public function skip(): int
+    public function skip(): string
     {
-        return 666;
+        return '___SKIP___';
     }
 }
