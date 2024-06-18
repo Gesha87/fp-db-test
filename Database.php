@@ -46,6 +46,36 @@ readonly class Database implements DatabaseInterface
                 if (!$paramResolver instanceof DefaultParamResolver) {
                     $i++;
                 }
+            } elseif ($char === "'") {
+                $string = $char;
+
+                do {
+                    $char = $query[++$i] ?? null;
+                    if ($char === null) {
+                        throw new Exception('Wrong template');
+                    }
+
+                    $string .= $char;
+
+                    if ($char === "'") {
+                        $nextChar = $query[$i + 1] ?? null;
+                        if ($nextChar === "'") {
+                            $string .= $nextChar;
+                            $char = null;
+                            $i++;
+                        }
+                    }
+                    if ($char === '\\') {
+                        $nextChar = $query[$i + 1] ?? null;
+                        if ($nextChar !== null) {
+                            $string .= $nextChar;
+                            $char = null;
+                            $i++;
+                        }
+                    }
+                } while ($char !== "'");
+
+                $currentContext->addContent($string);
             } else {
                 $currentContext->addContent($char);
             }
