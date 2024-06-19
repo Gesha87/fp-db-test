@@ -59,4 +59,9 @@ final class Context
             throw new Exception('Wrong template');
         }
     }
+
+    public function isSkipped(): bool
+    {
+        return $this->skip;
+    }
 }

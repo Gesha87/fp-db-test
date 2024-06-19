@@ -51,8 +51,10 @@ readonly class Database implements DatabaseInterface
                         $currentContext->skip();
                     }
 
-                    $paramResolver = $this->paramResolverFactory->getResolver($tokenType);
-                    $currentContext->addContent($paramResolver->resolve($arg));
+                    if (! $currentContext->isSkipped()) {
+                        $paramResolver = $this->paramResolverFactory->getResolver($tokenType);
+                        $currentContext->addContent($paramResolver->resolve($arg));
+                    }
                     break;
                 default:
                     throw new Exception('Wrong token type');
