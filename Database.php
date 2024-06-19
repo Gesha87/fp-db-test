@@ -3,8 +3,9 @@
 namespace FpDbTest;
 
 use Exception;
-use FpDbTest\ParamResolver\DefaultParamResolver;
 use FpDbTest\ParamResolver\ParamResolverFactory;
+use FpDbTest\Scanner\Scanner;
+use FpDbTest\Scanner\TokenType;
 use FpDbTest\StringEscaper\MysqlStringEscaper;
 use mysqli;
 
@@ -24,60 +25,37 @@ readonly class Database implements DatabaseInterface
     public function buildQuery(string $query, array $args = []): string
     {
         $currentContext = new Context();
-        for ($count = strlen($query), $i = 0; $i < $count; $i++) {
-            $char = $query[$i];
-            if ($char === '{') {
-                $currentContext = $currentContext->createBlock();
-            } elseif ($char === '}') {
-                $currentContext = $currentContext->closeBlock();
-            } elseif ($char === '?') {
-                if (count($args) === 0) {
-                    throw new Exception('Wrong count of arguments');
-                }
-
-                $arg = array_shift($args);
-                if ($arg === $this->skip()) {
-                    $currentContext->skip();
-                }
-
-                $paramResolver = $this->paramResolverFactory->getResolver($query[$i + 1] ?? null);
-                $currentContext->addContent($paramResolver->resolve($arg));
-
-                if (!$paramResolver instanceof DefaultParamResolver) {
-                    $i++;
-                }
-            } elseif ($char === "'") {
-                $string = $char;
-
-                do {
-                    $char = $query[++$i] ?? null;
-                    if ($char === null) {
-                        throw new Exception('Wrong template');
+        $scanner = new Scanner($query);
+        foreach ($scanner->getTokens() as $tokenType => $content) {
+            switch ($tokenType) {
+                case TokenType::CONTENT:
+                    $currentContext->addContent($content);
+                    break;
+                case TokenType::BLOCK_BEGIN:
+                    $currentContext = $currentContext->createBlock();
+                    break;
+                case TokenType::BLOCK_END:
+                    $currentContext = $currentContext->closeBlock();
+                    break;
+                case TokenType::PARAM_DEFAULT:
+                case TokenType::PARAM_ARRAY:
+                case TokenType::PARAM_INT:
+                case TokenType::PARAM_FLOAT:
+                case TokenType::PARAM_IDENTIFIER:
+                    if (count($args) === 0) {
+                        throw new Exception('Wrong count of arguments');
                     }
 
-                    $string .= $char;
-
-                    if ($char === "'") {
-                        $nextChar = $query[$i + 1] ?? null;
-                        if ($nextChar === "'") {
-                            $string .= $nextChar;
-                            $char = null;
-                            $i++;
-                        }
+                    $arg = array_shift($args);
+                    if ($arg === $this->skip()) {
+                        $currentContext->skip();
                     }
-                    if ($char === '\\') {
-                        $nextChar = $query[$i + 1] ?? null;
-                        if ($nextChar !== null) {
-                            $string .= $nextChar;
-                            $char = null;
-                            $i++;
-                        }
-                    }
-                } while ($char !== "'");
 
-                $currentContext->addContent($string);
-            } else {
-                $currentContext->addContent($char);
+                    $paramResolver = $this->paramResolverFactory->getResolver($tokenType);
+                    $currentContext->addContent($paramResolver->resolve($arg));
+                    break;
+                default:
+                    throw new Exception('Wrong token type');
             }
         }
 

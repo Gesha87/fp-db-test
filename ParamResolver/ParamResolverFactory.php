@@ -4,41 +4,26 @@ declare(strict_types=1);
 
 namespace FpDbTest\ParamResolver;
 
+use Exception;
+use FpDbTest\Scanner\TokenType;
 use FpDbTest\StringEscaper\StringEscaper;
 
-class ParamResolverFactory
+readonly class ParamResolverFactory
 {
-    private array $resolvers = [];
-
     public function __construct(
-       private readonly StringEscaper $escaper,
+       private StringEscaper $escaper,
     ) {
     }
 
-    public function getResolver(?string $specifier): ParamResolver
+    public function getResolver(TokenType $tokenType): ParamResolver
     {
-        $paramType = match ($specifier) {
-            'd' => ParamType::INT,
-            'f' => ParamType::FLOAT,
-            'a' => ParamType::ARRAY,
-            '#' => ParamType::IDENTIFIER,
-            default => ParamType::DEFAULT,
+        return match ($tokenType) {
+            TokenType::PARAM_INT => new IntParamResolver(),
+            TokenType::PARAM_FLOAT => new FloatParamResolver(),
+            TokenType::PARAM_ARRAY => new ArrayParamResolver($this->escaper),
+            TokenType::PARAM_IDENTIFIER => new IdentifierParamResolver(),
+            TokenType::PARAM_DEFAULT => new DefaultParamResolver($this->escaper),
+            default => throw new Exception('Wrong param type'),
         };
-
-        if (isset($this->resolvers[$paramType->value])) {
-            return $this->resolvers[$paramType->value];
-        }
-
-        $resolver = match ($paramType) {
-            ParamType::INT => new IntParamResolver(),
-            ParamType::FLOAT => new FloatParamResolver(),
-            ParamType::ARRAY => new ArrayParamResolver($this->escaper),
-            ParamType::IDENTIFIER => new IdentifierParamResolver(),
-            ParamType::DEFAULT => new DefaultParamResolver($this->escaper),
-        };
-
-        $this->resolvers[$paramType->value] = $resolver;
-
-        return $resolver;
     }
 }

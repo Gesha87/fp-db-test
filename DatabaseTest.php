@@ -42,9 +42,11 @@ class DatabaseTest
         }
 
         $results[] = $this->db->buildQuery(
-            'SELECT * FROM users WHERE name = \'My name is Jack\'n\'Jill?\' AND last_name = ?',
+            'SELECT * FROM users WHERE name = \'My name is Jack\'n\'Jill?\' AND email = \'\' AND last_name = ?',
             ['Smith']
         );
+
+        $results[] = $this->db->buildQuery('');
 
         $correct = [
             'SELECT name FROM users WHERE user_id = 1',
@@ -53,7 +55,8 @@ class DatabaseTest
             'UPDATE users SET `name` = \'Jack\', `email` = NULL WHERE user_id = -1',
             'SELECT name FROM users WHERE `user_id` IN (1, 2, 3)',
             'SELECT name FROM users WHERE `user_id` IN (1, 2, 3) AND block = 1',
-            'SELECT * FROM users WHERE name = \'My name is Jack\'n\'Jill?\' AND last_name = \'Smith\'',
+            'SELECT * FROM users WHERE name = \'My name is Jack\'n\'Jill?\' AND email = \'\' AND last_name = \'Smith\'',
+            '',
         ];
 
         if ($results !== $correct) {
