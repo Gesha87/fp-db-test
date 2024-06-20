@@ -11,15 +11,18 @@ readonly class Scanner
     ) {
     }
 
+    /**
+     * @return Token[]
+     */
     public function getTokens(): array
     {
         $result = [];
         for ($count = strlen($this->query), $i = 0; $i < $count; $i++) {
             $char = $this->query[$i];
             if ($char === '{') {
-                $result[] = [TokenType::BLOCK_BEGIN, $char];
+                $result[] = new Token(TokenType::BLOCK_BEGIN, $char);
             } elseif ($char === '}') {
-                $result[] = [TokenType::BLOCK_END, $char];
+                $result[] = new Token(TokenType::BLOCK_END, $char);
             } elseif ($char === '?') {
                 $specifier = $this->query[$i + 1] ?? null;
                 $tokenType = match ($specifier) {
@@ -36,7 +39,7 @@ readonly class Scanner
                     $i++;
                 }
 
-                $result[] = [$tokenType, $param];
+                $result[] = new Token($tokenType, $param);
             } elseif ($char === "'") {
                 $string = $char;
 
@@ -66,7 +69,7 @@ readonly class Scanner
                     }
                 } while ($char !== "'");
 
-                $result[] = [TokenType::CONTENT, $string];
+                $result[] = new Token(TokenType::CONTENT, $string);
             } else {
                 $string = $char;
                 $char = $this->query[$i + 1] ?? null;
@@ -76,7 +79,7 @@ readonly class Scanner
                     $char = $this->query[$i + 1] ?? null;
                 }
 
-                $result[] = [TokenType::CONTENT, $string];
+                $result[] = new Token(TokenType::CONTENT, $string);
             }
         }
 

@@ -32,10 +32,10 @@ class Database implements DatabaseInterface
             $this->tokens[$query] = $scanner->getTokens();
         }
 
-        foreach ($this->tokens[$query] as [$tokenType, $content]) {
-            switch ($tokenType) {
+        foreach ($this->tokens[$query] as $token) {
+            switch ($token->type) {
                 case TokenType::CONTENT:
-                    $currentContext->addContent($content);
+                    $currentContext->addContent($token->content);
                     break;
                 case TokenType::BLOCK_BEGIN:
                     $currentContext = $currentContext->createBlock();
@@ -58,7 +58,7 @@ class Database implements DatabaseInterface
                     }
 
                     if (! $currentContext->isSkipped()) {
-                        $paramResolver = $this->paramResolverFactory->getResolver($tokenType);
+                        $paramResolver = $this->paramResolverFactory->getResolver($token->type);
                         $currentContext->addContent($paramResolver->resolve($arg));
                     }
                     break;
