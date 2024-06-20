@@ -10,6 +10,9 @@ use FpDbTest\StringEscaper\StringEscaper;
 
 class ParamResolverFactory
 {
+    /**
+     * @var array<string, ParamResolver>
+     */
     private array $resolvers = [];
 
     public function __construct(

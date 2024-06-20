@@ -5,6 +5,7 @@ namespace FpDbTest;
 use Exception;
 use FpDbTest\ParamResolver\ParamResolverFactory;
 use FpDbTest\Scanner\Scanner;
+use FpDbTest\Scanner\Token;
 use FpDbTest\Scanner\TokenType;
 use FpDbTest\StringEscaper\MysqlStringEscaper;
 use mysqli;
@@ -13,7 +14,10 @@ class Database implements DatabaseInterface
 {
     private mysqli $mysqli;
     private ParamResolverFactory $paramResolverFactory;
-    private array $tokens;
+    /**
+     * @var array<string, Token[]>
+     */
+    private array $tokens = [];
 
     public function __construct(mysqli $mysqli)
     {
