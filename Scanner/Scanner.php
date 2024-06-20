@@ -3,7 +3,6 @@
 namespace FpDbTest\Scanner;
 
 use Exception;
-use Generator;
 
 readonly class Scanner
 {
@@ -12,17 +11,15 @@ readonly class Scanner
     ) {
     }
 
-    /**
-     * @return Generator<TokenType, string>
-     */
-    public function getTokens(): Generator
+    public function getTokens(): array
     {
+        $result = [];
         for ($count = strlen($this->query), $i = 0; $i < $count; $i++) {
             $char = $this->query[$i];
             if ($char === '{') {
-                yield TokenType::BLOCK_BEGIN => $char;
+                $result[] = [TokenType::BLOCK_BEGIN, $char];
             } elseif ($char === '}') {
-                yield TokenType::BLOCK_END => $char;
+                $result[] = [TokenType::BLOCK_END, $char];
             } elseif ($char === '?') {
                 $specifier = $this->query[$i + 1] ?? null;
                 $tokenType = match ($specifier) {
@@ -39,7 +36,7 @@ readonly class Scanner
                     $i++;
                 }
 
-                yield $tokenType => $param;
+                $result[] = [$tokenType, $param];
             } elseif ($char === "'") {
                 $string = $char;
 
@@ -69,7 +66,7 @@ readonly class Scanner
                     }
                 } while ($char !== "'");
 
-                yield TokenType::CONTENT => $string;
+                $result[] = [TokenType::CONTENT, $string];
             } else {
                 $string = $char;
                 $char = $this->query[$i + 1] ?? null;
@@ -79,8 +76,10 @@ readonly class Scanner
                     $char = $this->query[$i + 1] ?? null;
                 }
 
-                yield TokenType::CONTENT => $string;
+                $result[] = [TokenType::CONTENT, $string];
             }
         }
+
+        return $result;
     }
 }

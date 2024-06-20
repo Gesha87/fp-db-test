@@ -9,10 +9,11 @@ use FpDbTest\Scanner\TokenType;
 use FpDbTest\StringEscaper\MysqlStringEscaper;
 use mysqli;
 
-readonly class Database implements DatabaseInterface
+class Database implements DatabaseInterface
 {
     private mysqli $mysqli;
     private ParamResolverFactory $paramResolverFactory;
+    private array $tokens;
 
     public function __construct(mysqli $mysqli)
     {
@@ -26,7 +27,12 @@ readonly class Database implements DatabaseInterface
     {
         $currentContext = new Context();
         $scanner = new Scanner($query);
-        foreach ($scanner->getTokens() as $tokenType => $content) {
+
+        if (! isset($this->tokens[$query])) {
+            $this->tokens[$query] = $scanner->getTokens();
+        }
+
+        foreach ($this->tokens[$query] as [$tokenType, $content]) {
             switch ($tokenType) {
                 case TokenType::CONTENT:
                     $currentContext->addContent($content);
