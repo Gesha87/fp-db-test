@@ -14,6 +14,7 @@ class Database implements DatabaseInterface
 {
     private mysqli $mysqli;
     private ParamResolverFactory $paramResolverFactory;
+    private SkipValue $skipValue;
     /**
      * @var array<string, Token[]>
      */
@@ -25,6 +26,7 @@ class Database implements DatabaseInterface
         $this->paramResolverFactory = new ParamResolverFactory(
             new MysqlStringEscaper($this->mysqli),
         );
+        $this->skipValue = new SkipValue();
     }
 
     public function buildQuery(string $query, array $args = []): string
@@ -59,6 +61,7 @@ class Database implements DatabaseInterface
                     $arg = array_shift($args);
                     if ($arg === $this->skip()) {
                         $currentContext->skip();
+                        continue 2;
                     }
 
                     if (! $currentContext->isSkipped()) {
@@ -76,8 +79,8 @@ class Database implements DatabaseInterface
         return $currentContext->getContent();
     }
 
-    public function skip(): string
+    public function skip(): SkipValue
     {
-        return '___SKIP___';
+        return $this->skipValue;
     }
 }

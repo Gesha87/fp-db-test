@@ -8,7 +8,7 @@ use Exception;
 
 final class Context
 {
-    private string $content = '';
+    private array $content = [];
     private bool $skip = false;
 
     public function __construct(
@@ -38,12 +38,12 @@ final class Context
 
     public function addContent(string $content): void
     {
-        $this->content .= $content;
+        $this->content[] = $content;
     }
 
     public function getContent(): string
     {
-        return $this->skip ? '' : $this->content;
+        return $this->skip ? '' : implode('', $this->content);
     }
 
     public function skip(): void

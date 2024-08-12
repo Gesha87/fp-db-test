@@ -19,17 +19,22 @@ readonly class ArrayParamResolver implements ParamResolver
         if (!is_array($arg)) {
             throw new Exception('Argument should be an array');
         }
+        if ($arg === []) {
+            throw new Exception('Empty array not allowed');
+        }
 
         $keys = array_keys($arg);
         $isAssociative = array_keys($keys) !== $keys;
 
+        $defaultResolver = new DefaultParamResolver($this->escaper);
         if ($isAssociative) {
             $parts = [];
+            $identifierResolver = new IdentifierParamResolver();
             foreach ($arg as $key => $value) {
                 $parts[] = sprintf(
                     '%s = %s',
-                    (new IdentifierParamResolver())->resolve($key),
-                    (new DefaultParamResolver($this->escaper))->resolve($value),
+                    $identifierResolver->resolve($key),
+                    $defaultResolver->resolve($value),
                 );
             }
 
@@ -38,7 +43,7 @@ readonly class ArrayParamResolver implements ParamResolver
             return implode(
                 ', ',
                 array_map(
-                    fn($item): string => (new DefaultParamResolver($this->escaper))->resolve($item),
+                    fn($item): string => $defaultResolver->resolve($item),
                     $arg,
                 )
             );
