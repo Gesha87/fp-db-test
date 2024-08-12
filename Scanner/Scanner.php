@@ -4,27 +4,22 @@ namespace FpDbTest\Scanner;
 
 use Exception;
 
-readonly class Scanner
+class Scanner implements ScannerInterface
 {
-    public function __construct(
-        private string $query,
-    ) {
-    }
-
     /**
      * @return Token[]
      */
-    public function getTokens(): array
+    public function getTokens(string $query): array
     {
         $result = [];
-        for ($count = strlen($this->query), $i = 0; $i < $count; $i++) {
-            $char = $this->query[$i];
+        for ($count = strlen($query), $i = 0; $i < $count; $i++) {
+            $char = $query[$i];
             if ($char === '{') {
                 $result[] = new Token(TokenType::BLOCK_BEGIN, $char);
             } elseif ($char === '}') {
                 $result[] = new Token(TokenType::BLOCK_END, $char);
             } elseif ($char === '?') {
-                $specifier = $this->query[$i + 1] ?? null;
+                $specifier = $query[$i + 1] ?? null;
                 $tokenType = match ($specifier) {
                     'd' => TokenType::PARAM_INT,
                     'f' => TokenType::PARAM_FLOAT,
@@ -44,7 +39,7 @@ readonly class Scanner
                 $string = $char;
 
                 do {
-                    $char = $this->query[++$i] ?? null;
+                    $char = $query[++$i] ?? null;
                     if ($char === null) {
                         throw new Exception('Wrong template');
                     }
@@ -52,7 +47,7 @@ readonly class Scanner
                     $string .= $char;
 
                     if ($char === "'") {
-                        $nextChar = $this->query[$i + 1] ?? null;
+                        $nextChar = $query[$i + 1] ?? null;
                         if ($nextChar === "'") {
                             $string .= $nextChar;
                             $char = null;
@@ -60,7 +55,7 @@ readonly class Scanner
                         }
                     }
                     if ($char === '\\') {
-                        $nextChar = $this->query[$i + 1] ?? null;
+                        $nextChar = $query[$i + 1] ?? null;
                         if ($nextChar !== null) {
                             $string .= $nextChar;
                             $char = null;
@@ -72,11 +67,11 @@ readonly class Scanner
                 $result[] = new Token(TokenType::CONTENT, $string);
             } else {
                 $string = $char;
-                $char = $this->query[$i + 1] ?? null;
+                $char = $query[$i + 1] ?? null;
                 while ($char !== null && ! in_array($char, ['{', '}', '?', "'"])) {
                     $string .= $char;
                     $i++;
-                    $char = $this->query[$i + 1] ?? null;
+                    $char = $query[$i + 1] ?? null;
                 }
 
                 $result[] = new Token(TokenType::CONTENT, $string);

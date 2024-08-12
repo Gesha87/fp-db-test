@@ -5,7 +5,8 @@ namespace FpDbTest;
 use Exception;
 use FpDbTest\ParamResolver\ParamResolverFactory;
 use FpDbTest\Scanner\Scanner;
-use FpDbTest\Scanner\Token;
+use FpDbTest\Scanner\ScannerInterface;
+use FpDbTest\Scanner\ScannerWithCache;
 use FpDbTest\Scanner\TokenType;
 use FpDbTest\StringEscaper\MysqlStringEscaper;
 use mysqli;
@@ -14,11 +15,8 @@ class Database implements DatabaseInterface
 {
     private mysqli $mysqli;
     private ParamResolverFactory $paramResolverFactory;
+    private ScannerInterface $scanner;
     private SkipValue $skipValue;
-    /**
-     * @var array<string, Token[]>
-     */
-    private array $tokens = [];
 
     public function __construct(mysqli $mysqli)
     {
@@ -26,19 +24,16 @@ class Database implements DatabaseInterface
         $this->paramResolverFactory = new ParamResolverFactory(
             new MysqlStringEscaper($this->mysqli),
         );
+        $this->scanner = new ScannerWithCache(new Scanner());
         $this->skipValue = new SkipValue();
     }
 
     public function buildQuery(string $query, array $args = []): string
     {
         $currentContext = new Context();
-        $scanner = new Scanner($query);
+        $tokens = $this->scanner->getTokens($query);
 
-        if (! isset($this->tokens[$query])) {
-            $this->tokens[$query] = $scanner->getTokens();
-        }
-
-        foreach ($this->tokens[$query] as $token) {
+        foreach ($tokens as $token) {
             switch ($token->type) {
                 case TokenType::CONTENT:
                     $currentContext->addContent($token->content);

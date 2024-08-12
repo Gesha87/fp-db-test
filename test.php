@@ -19,6 +19,10 @@ if ($mysqli->connect_errno) {
 
 $db = new Database($mysqli);
 $test = new DatabaseTest($db);
-$test->testBuildQuery();
+$start = microtime(true);
+for ($i = 0; $i < 10000; $i++) {
+    $test->testBuildQuery();
+}
+echo microtime(true) - $start . "\n";
 
-exit('OK');
+exit("OK\n");
