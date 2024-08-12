@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace FpDbTest;
+namespace FpDbTest\Context;
 
 use Exception;
 
@@ -13,24 +13,24 @@ final class Context
 
     public function __construct(
         private readonly ?Context $parent = null,
+        private readonly ContextType $type = ContextType::QUERY,
     ) {
     }
 
-    public function createBlock(): Context
+    public function addContext(ContextType $type): Context
     {
-        if ($this->parent !== null) {
+        if ($this->type === ContextType::BLOCK) {
             throw new Exception('Nested blocks are not allowed');
         }
 
-        return new self($this);
+        return new self($this, $type);
     }
 
-    public function closeBlock(): Context
+    public function closeContext(): Context
     {
-        if ($this->parent === null) {
+        if ($this->type !== ContextType::BLOCK) {
             throw new Exception('Attempt to close non-existent block');
         }
-
         $this->parent->addContent($this->getContent());
 
         return $this->parent;

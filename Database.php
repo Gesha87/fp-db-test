@@ -3,6 +3,8 @@
 namespace FpDbTest;
 
 use Exception;
+use FpDbTest\Context\Context;
+use FpDbTest\Context\ContextType;
 use FpDbTest\ParamResolver\ParamResolverFactory;
 use FpDbTest\Scanner\Scanner;
 use FpDbTest\Scanner\ScannerInterface;
@@ -39,10 +41,10 @@ class Database implements DatabaseInterface
                     $currentContext->addContent($token->content);
                     break;
                 case TokenType::BLOCK_BEGIN:
-                    $currentContext = $currentContext->createBlock();
+                    $currentContext = $currentContext->addContext(ContextType::BLOCK);
                     break;
                 case TokenType::BLOCK_END:
-                    $currentContext = $currentContext->closeBlock();
+                    $currentContext = $currentContext->closeContext();
                     break;
                 case TokenType::PARAM_DEFAULT:
                 case TokenType::PARAM_ARRAY:
